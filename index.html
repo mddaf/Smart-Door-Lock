@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Door Lock - Bluetooth Terminal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .header .subtitle {
+            opacity: 0.8;
+            font-size: 0.9em;
+        }
+
+        .connection-status {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e74c3c;
+            animation: pulse 2s infinite;
+        }
+
+        .connection-status.connected {
+            background: #27ae60;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .main-content {
+            padding: 20px;
+        }
+
+        .bluetooth-section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bluetooth-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: left 0.5s;
+        }
+
+        .btn:hover:before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .device-list {
+            background: #f8f9fa;
+            border-radius: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .device-item {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .device-item:hover {
+            background: #e9ecef;
+        }
+
+        .device-item:last-child {
+            border-bottom: none;
+        }
+
+        .device-info {
+            flex: 1;
+        }
+
+        .device-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .device-address {
+            font-size: 0.8em;
+            color: #7f8c8d;
+            margin-top: 2px;
+        }
+
+        .connection-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #bdc3c7;
+        }
+
+        .connection-indicator.connected {
+            background: #27ae60;
+        }
+
+        .command-section {
+            margin-top: 25px;
+        }
+
+        .command-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .command-btn {
+            padding: 15px 10px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-status {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-unlock {
+            background: linear-gradient(135deg, #27ae60, #229954);
+            color: white;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .btn-alerts {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .custom-command {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .custom-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 0.9em;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .custom-input:focus {
+            border-color: #3498db;
+        }
+
+        .terminal {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 10px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            line-height: 1.4;
+        }
+
+        .terminal-line {
+            margin-bottom: 5px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .terminal-line.sent {
+            color: #3498db;
+        }
+
+        .terminal-line.received {
+            color: #2ecc71;
+        }
+
+        .terminal-line.error {
+            color: #e74c3c;
+        }
+
+        .terminal-line.info {
+            color: #f39c12;
+        }
+
+        .timestamp {
+            opacity: 0.7;
+            font-size: 0.7em;
+        }
+
+        .status-bar {
+            background: #34495e;
+            color: white;
+            padding: 10px 20px;
+            font-size: 0.8em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #3498db;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert-badge {
+            background: #e74c3c;
+            color: white;
+            font-size: 0.7em;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+        }
+
+        .clear-terminal {
+            background: transparent;
+            border: 1px solid #7f8c8d;
+            color: #7f8c8d;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .clear-terminal:hover {
+            background: #7f8c8d;
+            color: white;
+        }
+
+        .emergency-section {
+            background: linear-gradient(135deg, #fff5f5, #ffe5e5);
+            border: 2px solid #fed7d7;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .emergency-title {
+            color: #c53030;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+            
+            .command-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="connection-status" id="connectionStatus"></div>
+            <h1>🔐 Smart Door Lock</h1>
+            <div class="subtitle">Bluetooth Terminal v2.5</div>
+        </div>
+
+        <div class="main-content">
+            <!-- Bluetooth Connection Section -->
+            <div class="bluetooth-section">
+                <div class="section-title">
+                    📡 Bluetooth Connection
+                </div>
+                
+                <div class="bluetooth-controls">
+                    <button class="btn btn-primary" id="scanBtn">Scan Devices</button>
+                    <button class="btn btn-secondary" id="disconnectBtn" disabled>Disconnect</button>
+                </div>
+
+                <div class="device-list" id="deviceList">
+                    <div class="device-item">
+                        <div class="device-info">
+                            <div class="device-name">No devices found</div>
+                            <div class="device-address">Click "Scan Devices" to search</div>
+                        </div>
+                        <div class="connection-indicator"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Command Section -->
+            <div class="command-section">
+                <div class="section-title">
+                    🎮 Quick Commands
+                </div>
+                
+                <div class="command-buttons">
+                    <button class="command-btn btn-status" data-command="STATUS">📊 Status</button>
+                    <button class="command-btn btn-unlock" data-command="UNLOCK_NOW">🔓 Unlock</button>
+                    <button class="command-btn btn-alerts" data-command="GET_ALERTS">🔔 Get Alerts</button>
+                    <button class="command-btn btn-alerts" data-command="CLEAR_ALERTS">🗑️ Clear Alerts</button>
+                    <button class="command-btn btn-reset" data-command="RESET_LOCKOUT_2024">🔄 Reset Lockout</button>
+                    <button class="command-btn btn-danger" data-command="FULL_RESET_2024">⚠️ Full Reset</button>
+                </div>
+
+                <div class="custom-command">
+                    <input type="text" class="custom-input" id="customCommand" placeholder="Enter custom command...">
+                    <button class="btn btn-primary" id="sendBtn">Send</button>
+                </div>
+            </div>
+
+            <!-- Terminal Section -->
+            <div class="section-title">
+                📟 Terminal Output
+                <button class="clear-terminal" id="clearTerminal">Clear</button>
+            </div>
+            <div class="terminal" id="terminal">
+                <div class="terminal-line info">
+                    <span class="timestamp">[00:00:00]</span> Smart Door Lock Terminal Ready
+                </div>
+                <div class="terminal-line info">
+                    <span class="timestamp">[00:00:00]</span> Connect to HC-05/HC-06 to begin
+                </div>
+            </div>
+
+            <!-- Emergency Section -->
+            <div class="emergency-section">
+                <div class="emergency-title">
+                    ⚠️ Emergency Commands
+                </div>
+                <div style="font-size: 0.9em; color: #c53030; line-height: 1.4;">
+                    <strong>RESET_LOCKOUT_2024</strong> - Clear lockout only<br>
+                    <strong>FULL_RESET_2024</strong> - Reset all security<br>
+                    <strong>UNLOCK_NOW</strong> - Emergency door unlock
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <span id="connectionInfo">Disconnected</span>
+            <span id="messageCount">0 messages</span>
+        </div>
+    </div>
+
+    <script>
+        class BluetoothTerminal {
+            constructor() {
+                this.device = null;
+                this.characteristic = null;
+                this.isConnected = false;
+                this.messageCount = 0;
+                this.alertCount = 0;
+                
+                this.initializeUI();
+                this.bindEvents();
+            }
+
+            initializeUI() {
+                this.terminal = document.getElementById('terminal');
+                this.connectionStatus = document.getElementById('connectionStatus');
+                this.connectionInfo = document.getElementById('connectionInfo');
+                this.messageCount = document.getElementById('messageCount');
+                this.deviceList = document.getElementById('deviceList');
+                
+                // Check if Web Bluetooth is available
+                if (!navigator.bluetooth) {
+                    this.addTerminalLine('Web Bluetooth not supported in this browser', 'error');
+                    this.addTerminalLine('Please use Chrome, Edge, or Opera on Android/Windows', 'info');
+                }
+            }
+
+            bindEvents() {
+                // Scan button
+                document.getElementById('scanBtn').addEventListener('click', () => {
+                    this.scanForDevices();
+                });
+
+                // Disconnect button
+                document.getElementById('disconnectBtn').addEventListener('click', () => {
+                    this.disconnect();
+                });
+
+                // Command buttons
+                document.querySelectorAll('.command-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const command = e.target.dataset.command;
+                        this.sendCommand(command);
+                    });
+                });
+
+                // Send custom command
+                document.getElementById('sendBtn').addEventListener('click', () => {
+                    this.sendCustomCommand();
+                });
+
+                // Enter key in custom input
+                document.getElementById('customCommand').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.sendCustomCommand();
+                    }
+                });
+
+                // Clear terminal
+                document.getElementById('clearTerminal').addEventListener('click', () => {
+                    this.clearTerminal();
+                });
+            }
+
+            async scanForDevices() {
+                if (!navigator.bluetooth) {
+                    this.addTerminalLine('Bluetooth not supported', 'error');
+                    return;
+                }
+
+                try {
+                    this.addTerminalLine('Scanning for Bluetooth devices...', 'info');
+                    document.getElementById('scanBtn').innerHTML = '<div class="loading"></div> Scanning...';
+                    
+                    // Request device with Serial Port Profile UUID
+                    this.device = await navigator.bluetooth.requestDevice({
+                        //filters: [
+                           // { namePrefix: 'HC-' },
+                           // { name: 'SmartLock' },
+                           // { services: ['6e400001-b5a3-f393-e0a9-e50e24dcca9e'] }, // Nordic UART
+                       // ],
+                        optionalServices: [
+                            '6e400001-b5a3-f393-e0a9-e50e24dcca9e', // Nordic UART Service
+                            '00001101-0000-1000-8000-00805f9b34fb'  // Serial Port Profile
+                        ],
+                        acceptAllDevices: true
+                    });
+
+                    this.addTerminalLine(`Found device: ${this.device.name}`, 'info');
+                    this.updateDeviceList();
+                    this.connectToDevice();
+
+                } catch (error) {
+                    this.addTerminalLine(`Scan failed: ${error.message}`, 'error');
+                } finally {
+                    document.getElementById('scanBtn').innerHTML = 'Scan Devices';
+                }
+            }
+
+            async connectToDevice() {
+                if (!this.device) return;
+
+                try {
+                    this.addTerminalLine(`Connecting to ${this.device.name}...`, 'info');
+                    
+                    const server = await this.device.gatt.connect();
+                    this.addTerminalLine('Connected to GATT Server', 'info');
+
+                    // Try to get Nordic UART service first
+                    let service;
+                    try {
+                        service = await server.getPrimaryService('6e400001-b5a3-f393-e0a9-e50e24dcca9e');
+                        this.characteristic = await service.getCharacteristic('6e400002-b5a3-f393-e0a9-e50e24dcca9e');
+                        const notifyCharacteristic = await service.getCharacteristic('6e400003-b5a3-f393-e0a9-e50e24dcca9e');
+                        
+                        // Start notifications
+                        await notifyCharacteristic.startNotifications();
+                        notifyCharacteristic.addEventListener('characteristicvaluechanged', (event) => {
+                            this.handleReceivedData(event);
+                        });
+                        
+                    } catch (e) {
+                        // Fallback: try to find any writable characteristic
+                        const services = await server.getPrimaryServices();
+                        for (const service of services) {
+                            const characteristics = await service.getCharacteristics();
+                            for (const char of characteristics) {
+                                if (char.properties.write || char.properties.writeWithoutResponse) {
+                                    this.characteristic = char;
+                                    break;
+                                }
+                            }
+                            if (this.characteristic) break;
+                        }
+                    }
+
+                    if (this.characteristic) {
+                        this.isConnected = true;
+                        this.updateConnectionStatus();
+                        this.addTerminalLine('Successfully connected to Smart Door Lock', 'received');
+                        
+                        // Send initial ping
+                        setTimeout(() => this.sendCommand('PING'), 1000);
+                    } else {
+                        throw new Error('No suitable characteristic found');
+                    }
+
+                } catch (error) {
+                    this.addTerminalLine(`Connection failed: ${error.message}`, 'error');
+                    this.disconnect();
+                }
+            }
+
+            async disconnect() {
+                if (this.device && this.device.gatt.connected) {
+                    await this.device.gatt.disconnect();
+                }
+                
+                this.device = null;
+                this.characteristic = null;
+                this.isConnected = false;
+                this.updateConnectionStatus();
+                this.addTerminalLine('Disconnected from device', 'info');
+            }
+
+            async sendCommand(command) {
+                if (!this.isConnected || !this.characteristic) {
+                    this.addTerminalLine('Not connected to device', 'error');
+                    return;
+                }
+
+                try {
+                    const encoder = new TextEncoder();
+                    const data = encoder.encode(command + '\n');
+                    
+                    if (this.characteristic.properties.writeWithoutResponse) {
+                        await this.characteristic.writeValueWithoutResponse(data);
+                    } else {
+                        await this.characteristic.writeValue(data);
+                    }
+                    
+                    this.addTerminalLine(`> ${command}`, 'sent');
+                    this.messageCount++;
+                    this.updateMessageCount();
+                    
+                } catch (error) {
+                    this.addTerminalLine(`Send failed: ${error.message}`, 'error');
+                }
+            }
+
+            sendCustomCommand() {
+                const input = document.getElementById('customCommand');
+                const command = input.value.trim();
+                
+                if (command) {
+                    this.sendCommand(command);
+                    input.value = '';
+                }
+            }
+
+            handleReceivedData(event) {
+                const decoder = new TextDecoder();
+                const data = decoder.decode(event.target.value);
+                
+                // Split by lines and process each
+                const lines = data.split(/[\r\n]+/).filter(line => line.trim());
+                
+                lines.forEach(line => {
+                    if (line.trim()) {
+                        this.addTerminalLine(`< ${line}`, 'received');
+                        
+                        // Check for alerts
+                        if (line.includes('🚨') || line.includes('ALERT')) {
+                            this.alertCount++;
+                        }
+                    }
+                });
+                
+                this.messageCount++;
+                this.updateMessageCount();
+            }
+
+            addTerminalLine(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const line = document.createElement('div');
+                line.className = `terminal-line ${type}`;
+                line.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+                
+                this.terminal.appendChild(line);
+                this.terminal.scrollTop = this.terminal.scrollHeight;
+            }
+
+            clearTerminal() {
+                this.terminal.innerHTML = '';
+                this.messageCount = 0;
+                this.alertCount = 0;
+                this.updateMessageCount();
+                this.addTerminalLine('Terminal cleared', 'info');
+            }
+
+            updateConnectionStatus() {
+                const status = this.connectionStatus;
+                const info = this.connectionInfo;
+                const disconnectBtn = document.getElementById('disconnectBtn');
+                const commandBtns = document.querySelectorAll('.command-btn');
+                const sendBtn = document.getElementById('sendBtn');
+                
+                if (this.isConnected) {
+                    status.classList.add('connected');
+                    info.textContent = `Connected to ${this.device.name}`;
+                    disconnectBtn.disabled = false;
+                    commandBtns.forEach(btn => btn.disabled = false);
+                    sendBtn.disabled = false;
+                } else {
+                    status.classList.remove('connected');
+                    info.textContent = 'Disconnected';
+                    disconnectBtn.disabled = true;
+                    commandBtns.forEach(btn => btn.disabled = true);
+                    sendBtn.disabled = true;
+                }
+            }
+
+            updateDeviceList() {
+                if (!this.device) return;
+                
+                this.deviceList.innerHTML = `
+                    <div class="device-item">
+                        <div class="device-info">
+                            <div class="device-name">${this.device.name || 'Unknown Device'}</div>
+                            <div class="device-address">${this.device.id}</div>
+                        </div>
+                        <div class="connection-indicator ${this.isConnected ? 'connected' : ''}"></div>
+                    </div>
+                `;
+            }
+
+            updateMessageCount() {
+                this.messageCount.textContent = `${this.messageCount} messages`;
+                if (this.alertCount > 0) {
+                    this.messageCount.innerHTML += `<span class="alert-badge">${this.alertCount}</span>`;
+                }
+            }
+        }
+
+        // Initialize the terminal when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new BluetoothTerminal();
+        });
+    </script>
+</body>
+</html>
